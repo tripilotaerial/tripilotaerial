@@ -1,2 +1,58 @@
 [build]
   publish = "."
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Security headers (applied to every page on the site)
+# ──────────────────────────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Force HTTPS for 1 year. Only enable preload submission after verifying
+    # the site works under HTTPS on the apex + any subdomains.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+    # Disallow this site from being framed (clickjacking protection).
+    X-Frame-Options = "DENY"
+
+    # Block MIME-type sniffing.
+    X-Content-Type-Options = "nosniff"
+
+    # Trim referrer info sent to other origins.
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Disable browser features the site does not use.
+    Permissions-Policy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), fullscreen=(self)"
+
+    # Legacy XSS auditor — modern browsers ignore; CSP does the real work.
+    X-XSS-Protection = "0"
+
+    # Content Security Policy.
+    # 'unsafe-inline' is required because the current site keeps CSS and JS
+    # inlined in index.html. Everything else is locked down: no external
+    # scripts, fonts only from Google Fonts, images only from this origin,
+    # forms can only POST back to this site, page cannot be framed.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+
+    # Cross-origin isolation hints — harmless for this static site, helpful
+    # if you ever add embeds or share workers.
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Cache static assets aggressively.
+# ──────────────────────────────────────────────────────────────────────────────
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/favicon.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# HTML should always be revalidated so deploys land immediately.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
